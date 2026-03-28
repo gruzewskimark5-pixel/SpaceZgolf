@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from ..db import get_db
 from .. import models, schemas
 from ..services.heat import calculate_heat, calculate_ces
+from .stream import broadcast_leaderboard_update
 import uuid
 
 router = APIRouter(prefix="/api/v1", tags=["Events"])
@@ -29,7 +30,6 @@ def create_event(data: schemas.EventCreate, db: Session = Depends(get_db)):
 
 @router.post("/events/{event_id}/engagement")
 def add_engagement(event_id: uuid.UUID, data: schemas.EngagementCreate, db: Session = Depends(get_db)):
-    # Normalize inputs relative to some theoretical maximums for Golf/SpaceZ scale
     normalized = (
         0.4 * min(data.views / 100000.0, 1.0) +
         0.3 * min(data.retention, 1.0) +
@@ -48,11 +48,10 @@ def add_engagement(event_id: uuid.UUID, data: schemas.EngagementCreate, db: Sess
 
     db.add(metric)
     db.commit()
-
     return {"normalized_engagement": normalized}
 
 @router.post("/events/{event_id}/calculate-heat")
-def compute_heat(event_id: uuid.UUID, db: Session = Depends(get_db)):
+def compute_heat(event_id: uuid.UUID, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     metric = db.query(models.EngagementMetric).filter_by(event_id=event_id).first()
     if not metric:
         raise HTTPException(status_code=400, detail="No engagement metrics found for this event")
@@ -61,7 +60,6 @@ def compute_heat(event_id: uuid.UUID, db: Session = Depends(get_db)):
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    # TEMP placeholders for features we haven't built APIs for yet
     rivalry = 0.8
     cluster = 0.7
 
@@ -86,6 +84,9 @@ def compute_heat(event_id: uuid.UUID, db: Session = Depends(get_db)):
     db.add(heat)
     db.commit()
 
+    # Trigger broadcast in background
+    background_tasks.add_task(broadcast_leaderboard_update)
+
     return {"heat_index": hi}
 
 @router.post("/events/{event_id}/revenue")
@@ -98,11 +99,10 @@ def add_revenue(event_id: uuid.UUID, data: schemas.RevenueCreate, db: Session = 
 
     db.add(revenue)
     db.commit()
-
     return {"status": "ok", "revenue_added": data.revenue}
 
 @router.post("/events/{event_id}/calculate-ces")
-def compute_ces(event_id: uuid.UUID, db: Session = Depends(get_db)):
+def compute_ces(event_id: uuid.UUID, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     heat = db.query(models.HeatScore).filter_by(event_id=event_id).first()
     if not heat:
         raise HTTPException(status_code=400, detail="No heat score found for this event. Calculate heat first.")
@@ -122,5 +122,8 @@ def compute_ces(event_id: uuid.UUID, db: Session = Depends(get_db)):
 
     db.add(ces)
     db.commit()
+
+    # Trigger broadcast in background
+    background_tasks.add_task(broadcast_leaderboard_update)
 
     return {"ces": ces_value}
