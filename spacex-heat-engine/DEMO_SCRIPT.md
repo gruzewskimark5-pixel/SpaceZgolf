@@ -8,64 +8,56 @@
 ## Step 1: The Member Portal (Identity Surface) (20s)
 *Open `http://localhost:3000/dashboard` in the browser.*
 
-**Action:** Show the Member Console dropdown. Select **Kai Trump**.
+**Action:** Show the Member Console dropdown. Select **Claire Hogle**.
 
 **Script:**
-> "This is the member console. Every player has a live identity surface: their cluster, rating, Heat, and trend."
+> "This is Claire Hogle inside Apex. She’s not just a creator—we’ve turned her into a system node."
 >
-> "Kai is an ‘Emerging Authority’ in our Narrative‑Commerce cluster—her job in the system is to convert matches into commercial value."
-
-*Point out elements on the screen:*
-- Cluster: Narrative‑Commerce
-- Heat: Numeric value
-- Trend arrow: ↑ / ↓ / →
-
-**Script:**
-> "Heat is not just form—it’s narrative gravity. It tells us how much attention the system should route toward this player right now."
+> "You can see her cluster is Noise, her Heat, and her trend. Her job in the system is to stabilize volatility and expand horizontal reach."
 
 ---
 
 ## Step 2: Digital Twin (Timeline Surface) (20s)
 *Keep the `/dashboard` open.*
 
-**Action:** Scroll down to the Recent Digital Twin Events list. Or, run `python demo_ingest.py` in a terminal in the background to show live event ingestion.
+**Action:** Scroll down to the Recent Digital Twin Events list. (Ensure `seed_digital_twin.py` has been run so her events appear).
 
 **Script:**
-> "Behind that identity is a full Digital Twin. Every swing, every round, every session is captured as a structured event—club, ball speed, carry, context, and outcome."
+> "Behind that identity is a full Digital Twin. Every swing, every match, every content day is captured as a structured event."
 >
-> "We can see her recent events, how she’s trending over time, and how that performance is feeding her momentum score. That momentum is what drives the trend arrow you saw on the dashboard."
+> "Here you can see her recent match with Sabrina, plus a content session. This is what lets us treat creators with the same rigor as competitors."
 
 ---
 
 ## Step 3: Heat Engine v1 (Force Events & The Algorithm Favorite) (35s)
 *Open `http://localhost:3000/simulator` in a new tab.*
 
-**Action:** Point to the **Season 0: Canonical Top Force Events** panel. It will automatically load the top pairings.
+**Action:** Point to the **Season 0: Canonical Top Force Events** panel. It will automatically load the top pairings. Highlight the `Nelly Korda vs Alexis Miestowski` and `Claire Hogle vs Sabrina Andolpho` cards.
 
 **Script:**
-> "Now we take identity and performance and turn it into story. The Heat Engine looks at cluster interactions—Chaos vs Prestige, Narrative‑Commerce vs Prestige—and computes Force Events."
-
-**Action:** Highlight the `Nelly Korda vs Alexis Miestowski` card.
-
-**Script:**
-> "Here’s Nelly Korda versus Alexis Miestowski. This is a Prestige node versus a Chaos node."
+> "Now we ask the system a simple question: 'What are the highest-gravity stories we could tell today?' The Heat Engine looks at cluster interactions, volatility, and authority, and surfaces Force Events."
 >
-> "The system assigns a 1.90x multiplier to this interaction—our highest risk‑reward band. The result is a 9‑plus interaction score and effectively a 100% spike probability. That’s a guaranteed storyline."
-
-**Action:** Highlight `Claire Hogle` interacting with anyone (e.g. Sabrina Andolpho or Gabriella DeGasperis).
-
-**Script:**
-> "But volatility has to be managed. That’s why we have Claire Hogle. She is our Algorithm Favorite — a Noise‑Field creator node who stabilizes volatility, expands horizontal reach, and protects Prestige scarcity by absorbing low‑stakes attention."
+> "At the top you see Nelly versus Alexis—Prestige versus Chaos. That’s a guaranteed spike."
 >
-> "When Claire plays against Gabriella, we get a Creator vs Creator matchup. That sparks a viral narrative window without burning out our Prestige nodes."
+> "But right under it, you see Claire versus Sabrina—Noise versus Narrative‑Commerce. That’s a creator‑era Force Event: algorithm favorite versus emotional connector."
 
 ---
 
-## Step 4: Mark OS Golf Nodes (Operator Layer) (20s)
+## Step 4: The Director Brain (Operator Control) (20s)
+**Script:**
+> "The match you’re watching between Claire and Sabrina isn’t just a good idea—it’s system‑selected. The OS is telling us: 'This pairing has viral potential, high conversion potential, and it protects Prestige scarcity by routing attention through the Noise Field.'"
+>
+> "So the Director Brain doesn’t guess. It looks at identity, performance, volatility, and algorithm physics, and says:"
+>
+> "Run Claire versus Sabrina today. Run Nelly versus Alexis in the maximum Heat window. Run Kai versus Cailyn when you want authority versus chaos. That’s how Apex becomes a self‑directing league, not just a schedule."
+
+---
+
+## Step 5: Mark OS Golf Nodes (Operator Layer) (20s)
 **Script:**
 > "Finally, this is the operator layer. Every club and course I touch in my own game is a live node feeding the same AI engine. Driver at Panther National, 7‑iron at Trump Jupiter—each one is a node with its own metrics, trends, and upgrade path."
 >
-> "The same way we track Kai’s momentum in the league, we track my momentum as an operator. That lets us calibrate the system from both sides: the league as a product, and the operator as a user."
+> "The same way we track Claire’s momentum in the league, we track my momentum as an operator. That lets us calibrate the system from both sides: the league as a product, and the operator as a user."
 
 ---
 

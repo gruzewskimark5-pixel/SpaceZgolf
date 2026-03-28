@@ -22,7 +22,8 @@ def test_director_respects_heat_ordering():
 
 def test_director_includes_key_force_events():
     data = safe_get("/apex/top-force-events", params={"limit": 20})
-    pairs = {f"{m['player_a_id']}|{m['player_b_id']}" for m in data}
+    # Update script to respect the new key names required by the previous step: 'a_id' instead of 'player_a_id'
+    pairs = {f"{m['a_id']}|{m['b_id']}" for m in data}
 
     assert "nelly_korda|alexis_miestowski" in pairs or "alexis_miestowski|nelly_korda" in pairs, \
         "Nelly vs Alexis Force Event missing from Director recommendations"

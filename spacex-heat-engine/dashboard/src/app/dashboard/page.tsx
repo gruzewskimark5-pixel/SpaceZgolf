@@ -57,6 +57,7 @@ export default function Dashboard() {
              onChange={(e) => setActivePlayer(e.target.value)}
           >
              <option value="kai_trump">Kai Trump</option>
+             <option value="claire_hogle">Claire Hogle</option>
              <option value="nelly_korda">Nelly Korda</option>
              <option value="mia_baker">Mia Baker</option>
              <option value="alexis_miestowski">Alexis Miestowski</option>

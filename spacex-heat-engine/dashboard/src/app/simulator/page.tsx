@@ -28,13 +28,12 @@ export default function SimulationDashboard() {
   const [optHistory, setOptHistory] = useState<any[]>([]);
   const [bestPolicy, setBestPolicy] = useState<any>(null);
 
-  // Top Force Events (Heat Engine v1)
+  // Top Force Events
   const [topForceEvents, setTopForceEvents] = useState<any[]>([]);
 
   const wsRef = useRef<WebSocket | null>(null);
   const optWsRef = useRef<WebSocket | null>(null);
 
-  // Initial load of runs and force events
   useEffect(() => {
     fetch(`${API_BASE}/runs`)
       .then(res => res.json())
@@ -51,7 +50,7 @@ export default function SimulationDashboard() {
       })
       .catch(err => console.error("Error fetching initial runs:", err));
 
-    fetch(`${API_BASE}/apex/top-force-events?limit=4`)
+    fetch(`${API_BASE}/apex/top-force-events?limit=8`)
       .then(res => res.json())
       .then(data => setTopForceEvents(data))
       .catch(err => console.error("Error fetching top force events:", err));
@@ -210,6 +209,14 @@ export default function SimulationDashboard() {
 
   const policyDiffs = activeRunId && comparisonRunId ? diffPolicy(runs[activeRunId].policy, runs[comparisonRunId].policy) : [];
 
+  // Identify featured matchups for demo
+  const isFeatured = (ev: any) => {
+      const p = ev.pairing;
+      if (p.includes("Nelly Korda") && p.includes("Alexis Miestowski")) return "Prestige Highlight";
+      if (p.includes("Claire Hogle") && p.includes("Sabrina Andolpho")) return "Creator-Era Highlight";
+      return null;
+  }
+
   return (
     <div className="p-8 grid gap-8 min-h-screen bg-[#0a0a0a] text-slate-200">
       <div className="flex justify-between items-end border-b border-slate-800 pb-4">
@@ -218,6 +225,7 @@ export default function SimulationDashboard() {
             <p className="text-slate-500 mt-2">Heat Engine v1 + Self-Improving Director System</p>
         </div>
         <div className="flex items-center space-x-2">
+            <a href="/dashboard" className="px-4 py-2 bg-slate-800 text-sm hover:bg-slate-700 transition rounded mr-4">Member Console</a>
             <span className={`text-sm ${simStatus === 'Running' || optStatus === 'Optimizing' ? 'text-emerald-400' : 'text-slate-500'}`}>
                 System: {optStatus === 'Optimizing' ? 'Optimizing' : simStatus}
             </span>
@@ -234,24 +242,27 @@ export default function SimulationDashboard() {
          </div>
          <CardContent className="p-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {topForceEvents.map((ev, i) => (
-                    <div key={i} className={`p-4 rounded-lg border ${ev.validated_top_force ? 'border-amber-500 bg-amber-900/20 shadow-lg shadow-amber-500/10' : 'border-slate-800 bg-slate-900'}`}>
-                        <div className="text-xs uppercase tracking-wider text-slate-500 mb-2 font-mono">{ev.cluster_pair}</div>
-                        <div className="font-bold text-lg text-slate-200 mb-4">{ev.pairing}</div>
+                {topForceEvents.map((ev, i) => {
+                    const feature = isFeatured(ev);
+                    return (
+                    <div key={i} className={`p-4 rounded-lg border relative ${feature ? 'border-amber-500 bg-amber-900/20 shadow-lg shadow-amber-500/10' : 'border-slate-800 bg-slate-900'}`}>
+                        {feature && <div className="absolute -top-3 left-4 bg-amber-500 text-slate-900 text-[10px] font-bold px-2 py-1 rounded shadow-lg">{feature.toUpperCase()}</div>}
+                        <div className="text-xs uppercase tracking-wider text-slate-500 mb-2 font-mono mt-1">{ev.cluster_pair}</div>
+                        <div className="font-bold text-lg text-slate-200 mb-4 h-[56px] leading-tight">{ev.pairing}</div>
                         <div className="flex justify-between border-b border-slate-800 pb-2 mb-2">
                             <span className="text-slate-500 text-sm">Interaction Score</span>
-                            <span className={`font-mono font-bold ${ev.validated_top_force ? 'text-amber-500' : 'text-emerald-400'}`}>{ev.interaction_score.toFixed(2)}</span>
+                            <span className={`font-mono font-bold ${feature ? 'text-amber-500' : 'text-emerald-400'}`}>{ev.interaction_score.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between border-b border-slate-800 pb-2 mb-2">
                             <span className="text-slate-500 text-sm">Spike Prob</span>
                             <span className="font-mono text-slate-300">{ev.spike_probability}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-500 text-sm">Conversion Pot.</span>
-                            <span className="font-mono text-cyan-400">{ev.conversion_potential.toFixed(2)}</span>
+                            <span className="text-slate-500 text-sm">Multiplier</span>
+                            <span className="font-mono text-sky-400">{ev.multiplier || "N/A"}</span>
                         </div>
                     </div>
-                ))}
+                )})}
                 {topForceEvents.length === 0 && <div className="text-slate-500 col-span-4 text-center py-4">Fetching Force Events...</div>}
             </div>
          </CardContent>
