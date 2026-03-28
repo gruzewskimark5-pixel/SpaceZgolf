@@ -37,7 +37,7 @@
 
 ---
 
-## Step 3: Heat Engine v1 (Force Events) (25s)
+## Step 3: Heat Engine v1 (Force Events & The Algorithm Favorite) (35s)
 *Open `http://localhost:3000/simulator` in a new tab.*
 
 **Action:** Point to the **Season 0: Canonical Top Force Events** panel. It will automatically load the top pairings.
@@ -52,10 +52,12 @@
 >
 > "The system assigns a 1.90x multiplier to this interaction—our highest risk‑reward band. The result is a 9‑plus interaction score and effectively a 100% spike probability. That’s a guaranteed storyline."
 
-**Action:** Highlight the `Cailyn vs Kai Trump` card.
+**Action:** Highlight `Claire Hogle` interacting with anyone (e.g. Sabrina Andolpho or Gabriella DeGasperis).
 
 **Script:**
-> "Here’s Cailyn, a Chaos‑Lite game‑born asset, against Kai, our Emerging Authority. This is how we test whether authority can tame volatility—and that’s exactly the kind of match sponsors want to sit on."
+> "But volatility has to be managed. That’s why we have Claire Hogle. She is our Algorithm Favorite — a Noise‑Field creator node who stabilizes volatility, expands horizontal reach, and protects Prestige scarcity by absorbing low‑stakes attention."
+>
+> "When Claire plays against Gabriella, we get a Creator vs Creator matchup. That sparks a viral narrative window without burning out our Prestige nodes."
 
 ---
 

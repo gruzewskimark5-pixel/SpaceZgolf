@@ -14,7 +14,6 @@ async def predict_pairing(player_a_id: str, player_b_id: str, context_modifier: 
 
     result = calculate_interaction_score(a, b, context_modifier)
 
-    # Validation example from spec
     if (a.name == "Nelly Korda" and b.name == "Alexis Miestowski") or \
        (b.name == "Nelly Korda" and a.name == "Alexis Miestowski"):
         result["validated_top_force"] = True
@@ -43,7 +42,6 @@ async def top_force_events(limit: int = 5):
             a, b = ROSTER[ids[i]], ROSTER[ids[j]]
             result = calculate_interaction_score(a, b)
 
-            # Hardcoded validation
             if (a.name == "Nelly Korda" and b.name == "Alexis Miestowski") or \
                (b.name == "Nelly Korda" and a.name == "Alexis Miestowski"):
                 result["validated_top_force"] = True
@@ -52,14 +50,13 @@ async def top_force_events(limit: int = 5):
                 result["multiplier"] = "1.90x"
                 result["top_force_event"] = True
 
-            if result.get("top_force_event"):
-                pairs.append({
-                    "player_a_id": a.id,
-                    "player_b_id": b.id,
-                    "pairing": f"{a.name} vs {b.name}",
-                    "cluster_pair": f"{a.cluster} × {b.cluster}",
-                    **result,
-                })
+            pairs.append({
+                "player_a_id": a.id,
+                "player_b_id": b.id,
+                "pairing": f"{a.name} vs {b.name}",
+                "cluster_pair": f"{a.cluster} × {b.cluster}",
+                **result,
+            })
 
     pairs.sort(key=lambda x: x["interaction_score"], reverse=True)
     return pairs[:limit]

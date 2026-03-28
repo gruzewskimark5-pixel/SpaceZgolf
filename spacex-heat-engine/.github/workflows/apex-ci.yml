@@ -1,0 +1,48 @@
+name: Apex CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      backend:
+        image: python:3.12
+        ports:
+          - 8000:8000
+        options: >-
+          --health-cmd="curl --fail http://localhost:8000/docs"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+        volumes:
+          - ./:/app
+        command: >
+          bash -lc "cd /app &&
+                    pip install -r requirements.txt &&
+                    uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install test deps
+        run: |
+          pip install -r requirements.txt
+          pip install pytest jsonschema requests
+
+      - name: Run tests
+        env:
+          BASE_URL: http://localhost:8000
+        run: |
+          python test_apex_pipeline.py
