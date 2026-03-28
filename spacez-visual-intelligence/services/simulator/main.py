@@ -304,6 +304,16 @@ html = """
 
         let ws;
 
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         function connect() {
             ws = new WebSocket(wsUrl);
 
@@ -345,7 +355,7 @@ html = """
 
         function createSalienceBar(label, value) {
             return `
-                <div class="salience-label"><span>${label}</span><span>${(value*100).toFixed(0)}%</span></div>
+                <div class="salience-label"><span>${escapeHTML(label)}</span><span>${(value*100).toFixed(0)}%</span></div>
                 <div class="salience-bar-container">
                     <div class="salience-bar" style="width: ${value * 100}%; background: ${value > 0.8 ? '#ff0266' : '#03dac6'}"></div>
                 </div>
@@ -365,8 +375,8 @@ html = """
             let timeString = new Date(data.timestamp).toLocaleTimeString();
 
             el.innerHTML = `
-                <div class="meta">${timeString} | ID: ${data.event_id} | Type: ${data.event_type}</div>
-                <div class="title">${data.description}</div>
+                <div class="meta">${timeString} | ID: ${escapeHTML(data.event_id)} | Type: ${escapeHTML(data.event_type)}</div>
+                <div class="title">${escapeHTML(data.description)}</div>
                 ${createSalienceBar('Narrative', s.narrative)}
                 ${createSalienceBar('Visual', s.visual)}
                 ${createSalienceBar('Audio', s.audio)}
@@ -384,7 +394,7 @@ html = """
             // Simulate Director Decision based on high salience
             if (isHighSalience) {
                 latestDecision.innerHTML = `
-                    <div class="meta">Triggered by: ${data.event_id}</div>
+                    <div class="meta">Triggered by: ${escapeHTML(data.event_id)}</div>
                     <div class="title">Action: ASSEMBLE_HIGHLIGHT_CLIP</div>
                     <div>Confidence: ${(avgSal * 100).toFixed(1)}%</div>
                     <div style="color: #aaa; font-size: 0.85em; margin-top: 5px;">
@@ -413,7 +423,7 @@ html = """
             let retColor = data.retention_delta > 0 ? '#4caf50' : '#f44336';
 
             el.innerHTML = `
-                <div class="meta">${timeString} | Ref: ${data.event_id}</div>
+                <div class="meta">${timeString} | Ref: ${escapeHTML(data.event_id)}</div>
                 <div class="title">Engagement Score: ${(data.engagement_score * 100).toFixed(1)}</div>
                 <div>Retention Delta: <span style="color: ${retColor}">${(data.retention_delta > 0 ? '+' : '')}${(data.retention_delta * 100).toFixed(2)}%</span></div>
                 <div class="meta" style="margin-top: 5px;">Latency: <span style="${data.latency_ms > 200 ? 'color: #ff5252; font-weight: bold;' : ''}">${data.latency_ms}ms</span></div>
