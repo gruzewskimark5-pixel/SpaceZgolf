@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import random
 import nats
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
@@ -86,7 +87,6 @@ async def nats_listener():
                     data = json.loads(msg.data.decode())
 
                     # Apply Chaos: Drop events
-                    import random
                     if random.random() < chaos_config["drop_rate"]:
                         logger.info(f"Chaos: Dropped event {data.get('event_id')}")
                         await msg.ack()
