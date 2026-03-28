@@ -164,3 +164,20 @@ class CESScore(Base):
     revenue = Column(Float)
     ces = Column(Float)
     created_at = Column(DateTime, default=func.now())
+
+
+class HeatTimeSeries(Base):
+    __tablename__ = "heat_time_series"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    event_id = Column(GUID(), nullable=False)
+    player_id = Column(GUID(), nullable=True) # Optional, if we want to track specific player's heat
+
+    timestamp = Column(DateTime, default=func.now())
+    heat_index = Column(Float)
+
+    engagement = Column(Float)
+    rivalry = Column(Float)
+    cluster = Column(Float)
+    phase = Column(Float)
+    novelty = Column(Float)

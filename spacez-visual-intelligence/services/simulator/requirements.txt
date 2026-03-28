@@ -1,5 +1,0 @@
-nats-py
-fastapi
-uvicorn
-pydantic
-websockets

@@ -1,7 +1,6 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from ..db import SessionLocal
-from .. import models
 import json
 import logging
 from .leaderboard import get_leaderboard
@@ -22,10 +21,11 @@ class ConnectionManager:
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
 
-    async def broadcast(self, message: str):
+    async def broadcast(self, message: dict):
+        msg_str = json.dumps(message)
         for connection in list(self.active_connections):
             try:
-                await connection.send_text(message)
+                await connection.send_text(msg_str)
             except Exception as e:
                 logger.error(f"Failed to send to websocket: {e}")
                 self.disconnect(connection)
@@ -37,12 +37,22 @@ async def broadcast_leaderboard_update():
     db = SessionLocal()
     try:
         data = get_leaderboard(db)
-        await manager.broadcast(json.dumps({
-            "type": "leaderboard_update",
+        await manager.broadcast({
+            "type": "LEADERBOARD_UPDATE",
             "data": data
-        }))
+        })
     finally:
         db.close()
+
+async def broadcast_heat_update(event_id: str, timestamp: str, data: dict):
+    # Sends a HEAT_UPDATE frame to build the timeline scrubber
+    await manager.broadcast({
+        "type": "HEAT_UPDATE",
+        "scope": "event",
+        "event_id": event_id,
+        "timestamp": timestamp,
+        "data": data
+    })
 
 
 @router.websocket("/ws/stream")
@@ -55,12 +65,12 @@ async def websocket_endpoint(websocket: WebSocket):
         db.close()
 
         await websocket.send_text(json.dumps({
-            "type": "leaderboard_update",
+            "type": "LEADERBOARD_UPDATE",
             "data": initial_data
         }))
 
         while True:
-            # Keep connection open. We could listen for commands here later.
+            # Keep connection open.
             data = await websocket.receive_text()
 
     except WebSocketDisconnect:

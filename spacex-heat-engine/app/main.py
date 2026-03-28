@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .db import Base, engine
-from .routers import events, players, matches, leaderboard, stream
+from .routers import events, players, matches, leaderboard, stream, simulate
 
 Base.metadata.create_all(bind=engine)
 
@@ -20,6 +20,7 @@ app.include_router(matches.router)
 app.include_router(events.router)
 app.include_router(leaderboard.router)
 app.include_router(stream.router)
+app.include_router(simulate.router)
 
 @app.get("/")
 def read_root():
