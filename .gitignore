@@ -1,3 +1,8 @@
 venv/
 __pycache__/
 *.pyc
+miakka-di-engine/node_modules
+miakka.db
+backend_output.log
+miakka-di-engine/miakka.db
+miakka-di-engine/backend_output.log
