@@ -1,0 +1,4 @@
+web3
+ccxt
+yfinance
+python-dotenv
