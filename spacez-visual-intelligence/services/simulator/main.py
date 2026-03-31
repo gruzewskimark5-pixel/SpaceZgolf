@@ -2,13 +2,26 @@ import asyncio
 import json
 import logging
 import nats
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+import random
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 from pydantic import BaseModel
 
+
 app = FastAPI()
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline' ws: wss:;"
+    return response
+
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -86,7 +99,6 @@ async def nats_listener():
                     data = json.loads(msg.data.decode())
 
                     # Apply Chaos: Drop events
-                    import random
                     if random.random() < chaos_config["drop_rate"]:
                         logger.info(f"Chaos: Dropped event {data.get('event_id')}")
                         await msg.ack()
