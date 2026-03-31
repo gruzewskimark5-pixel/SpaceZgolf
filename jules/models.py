@@ -66,3 +66,33 @@ class Leaderboard:
         return Leaderboard(
             entries=[LeaderboardEntry.from_dict(e) for e in d.get("entries", [])]
         )
+
+from datetime import datetime
+
+@dataclass
+class RivalryEvent:
+    source_event_id: str
+    player_a_id: str
+    player_b_id: str
+    round_id: str
+    hole_number: int
+    di: float
+    event_type: str
+    base_weight: float
+    event_ts: datetime
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Normalize payload keys to match sync client.
+        """
+        return {
+            "source_event_id": self.source_event_id,
+            "player_a_id": self.player_a_id,
+            "player_b_id": self.player_b_id,
+            "round_id": self.round_id,
+            "hole_number": self.hole_number,
+            "di": self.di,
+            "event_type": self.event_type,
+            "base_weight": self.base_weight,
+            "event_ts": self.event_ts.isoformat(),
+        }
