@@ -5,6 +5,15 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Security: Add basic security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
+
 function calculate_di(hole_data, player_score) {
     // Execution Complexity (EC) - how physically demanding the hole is
     let ec = (
