@@ -54,6 +54,7 @@ export async function handleKernelRequest(
         return { success: false, error: "unknown request type" };
     }
   } catch (err: any) {
-    return { success: false, error: err.message };
+    console.error("Kernel Request Error:", err);
+    return { success: false, error: "Internal server error" };
   }
 }
