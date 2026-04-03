@@ -1,0 +1,7 @@
+{
+  "name": "spacezgolf",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "echo \"Root test pass\""
+  }
+}
