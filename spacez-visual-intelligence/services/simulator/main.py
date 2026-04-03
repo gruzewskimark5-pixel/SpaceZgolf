@@ -387,14 +387,20 @@ html = """
 
             let timeString = new Date(data.timestamp).toLocaleTimeString();
 
-            el.innerHTML = `
-                <div class="meta">${escapeHTML(timeString)} | ID: ${escapeHTML(data.event_id)} | Type: ${escapeHTML(data.event_type)}</div>
-                <div class="title">${escapeHTML(data.description)}</div>
-                ${createSalienceBar('Narrative', s.narrative)}
-                ${createSalienceBar('Visual', s.visual)}
-                ${createSalienceBar('Audio', s.audio)}
-                ${createSalienceBar('Game State', s.game_state)}
-            `;
+            const metaDiv = document.createElement('div');
+            metaDiv.className = 'meta';
+            metaDiv.textContent = `${timeString} | ID: ${data.event_id} | Type: ${data.event_type}`;
+
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'title';
+            titleDiv.textContent = data.description;
+
+            el.appendChild(metaDiv);
+            el.appendChild(titleDiv);
+            el.insertAdjacentHTML('beforeend', createSalienceBar('Narrative', s.narrative));
+            el.insertAdjacentHTML('beforeend', createSalienceBar('Visual', s.visual));
+            el.insertAdjacentHTML('beforeend', createSalienceBar('Audio', s.audio));
+            el.insertAdjacentHTML('beforeend', createSalienceBar('Game State', s.game_state));
 
             // Prepend to top
             eventsFeed.insertBefore(el, eventsFeed.firstChild);
@@ -406,14 +412,27 @@ html = """
 
             // Simulate Director Decision based on high salience
             if (isHighSalience) {
-                latestDecision.innerHTML = `
-                    <div class="meta">Triggered by: ${escapeHTML(data.event_id)}</div>
-                    <div class="title">Action: ASSEMBLE_HIGHLIGHT_CLIP</div>
-                    <div>Confidence: ${(avgSal * 100).toFixed(1)}%</div>
-                    <div style="color: #aaa; font-size: 0.85em; margin-top: 5px;">
-                        Queueing FFmpeg process... (Est pre-roll: 4s)
-                    </div>
-                `;
+                latestDecision.innerHTML = ''; // clear previous
+                const ldMeta = document.createElement('div');
+                ldMeta.className = 'meta';
+                ldMeta.textContent = `Triggered by: ${data.event_id}`;
+                latestDecision.appendChild(ldMeta);
+
+                const ldTitle = document.createElement('div');
+                ldTitle.className = 'title';
+                ldTitle.textContent = 'Action: ASSEMBLE_HIGHLIGHT_CLIP';
+                latestDecision.appendChild(ldTitle);
+
+                const ldConf = document.createElement('div');
+                ldConf.textContent = `Confidence: ${(avgSal * 100).toFixed(1)}%`;
+                latestDecision.appendChild(ldConf);
+
+                const ldDesc = document.createElement('div');
+                ldDesc.style.color = '#aaa';
+                ldDesc.style.fontSize = '0.85em';
+                ldDesc.style.marginTop = '5px';
+                ldDesc.textContent = 'Queueing FFmpeg process... (Est pre-roll: 4s)';
+                latestDecision.appendChild(ldDesc);
 
                 // Simulate Commentary
                 const phrases = [
@@ -435,12 +454,36 @@ html = """
             let timeString = new Date(data.timestamp).toLocaleTimeString();
             let retColor = data.retention_delta > 0 ? '#4caf50' : '#f44336';
 
-            el.innerHTML = `
-                <div class="meta">${escapeHTML(timeString)} | Ref: ${escapeHTML(data.event_id)}</div>
-                <div class="title">Engagement Score: ${(data.engagement_score * 100).toFixed(1)}</div>
-                <div>Retention Delta: <span style="color: ${retColor}">${(data.retention_delta > 0 ? '+' : '')}${(data.retention_delta * 100).toFixed(2)}%</span></div>
-                <div class="meta" style="margin-top: 5px;">Latency: <span style="${data.latency_ms > 200 ? 'color: #ff5252; font-weight: bold;' : ''}">${escapeHTML(data.latency_ms)}ms</span></div>
-            `;
+            const fbMeta1 = document.createElement('div');
+            fbMeta1.className = 'meta';
+            fbMeta1.textContent = `${timeString} | Ref: ${data.event_id}`;
+            el.appendChild(fbMeta1);
+
+            const fbTitle = document.createElement('div');
+            fbTitle.className = 'title';
+            fbTitle.textContent = `Engagement Score: ${(data.engagement_score * 100).toFixed(1)}`;
+            el.appendChild(fbTitle);
+
+            const fbRet = document.createElement('div');
+            fbRet.textContent = 'Retention Delta: ';
+            const fbRetSpan = document.createElement('span');
+            fbRetSpan.style.color = retColor;
+            fbRetSpan.textContent = `${(data.retention_delta > 0 ? '+' : '')}${(data.retention_delta * 100).toFixed(2)}%`;
+            fbRet.appendChild(fbRetSpan);
+            el.appendChild(fbRet);
+
+            const fbMeta2 = document.createElement('div');
+            fbMeta2.className = 'meta';
+            fbMeta2.style.marginTop = '5px';
+            fbMeta2.textContent = 'Latency: ';
+            const fbLatSpan = document.createElement('span');
+            if (data.latency_ms > 200) {
+                fbLatSpan.style.color = '#ff5252';
+                fbLatSpan.style.fontWeight = 'bold';
+            }
+            fbLatSpan.textContent = `${data.latency_ms}ms`;
+            fbMeta2.appendChild(fbLatSpan);
+            el.appendChild(fbMeta2);
 
             feedbackFeed.insertBefore(el, feedbackFeed.firstChild);
 
