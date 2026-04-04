@@ -9,7 +9,6 @@ from fastapi.security import APIKeyHeader
 import os
 import hmac
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 import uvicorn
 from pydantic import BaseModel
 
