@@ -113,3 +113,10 @@ __pycache__/
 # MarkOS Kernel specifics
 markos-kernel/node_modules/
 markos-kernel/dist/
+miakka-di-engine/node_modules
+miakka.db
+backend_output.log
+miakka-di-engine/miakka.db
+miakka-di-engine/backend_output.log
+node_modules/
+node_modules/
