@@ -50,6 +50,7 @@ function calculate_di(hole_data, player_score) {
 
 app.get('/api/courses/:id', (req, res) => {
   db.get("SELECT * FROM courses WHERE id = ?", [req.params.id], (err, row) => {
+      if (err) { console.error('Database error:', err); return res.status(500).json({error: 'Database error occurred'}); }
       if (err) {
           console.error('Database error:', err);
           return res.status(500).json({error: 'Internal server error'});
@@ -60,6 +61,7 @@ app.get('/api/courses/:id', (req, res) => {
 
 app.get('/api/courses/:id/holes', (req, res) => {
   db.all("SELECT * FROM holes WHERE course_id = ?", [req.params.id], (err, rows) => {
+      if (err) { console.error('Database error:', err); return res.status(500).json({error: 'Database error occurred'}); }
       if (err) {
           console.error('Database error:', err);
           return res.status(500).json({error: 'Internal server error'});
@@ -73,6 +75,7 @@ app.post('/api/rounds/calculate-di', (req, res) => {
   if (!course_id || !scores) return res.status(400).json({error: "course_id and scores are required"});
 
   db.all("SELECT * FROM holes WHERE course_id = ?", [course_id], (err, holes) => {
+      if (err) { console.error('Database error:', err); return res.status(500).json({error: 'Database error occurred'}); }
       if (err) {
           console.error('Database error:', err);
           return res.status(500).json({error: 'Internal server error'});

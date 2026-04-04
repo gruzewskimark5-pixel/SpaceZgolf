@@ -6,5 +6,7 @@ miakka.db
 backend_output.log
 miakka-di-engine/miakka.db
 miakka-di-engine/backend_output.log
+miakka-di-engine/frontend/node_modules/
+miakka-di-engine/backend/node_modules/
 node_modules/
 node_modules/
