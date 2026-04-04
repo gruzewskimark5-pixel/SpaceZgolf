@@ -5,6 +5,15 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Security: Add basic security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
+
 function calculate_di(hole_data, player_score) {
     // Execution Complexity (EC) - how physically demanding the hole is
     let ec = (
@@ -41,14 +50,20 @@ function calculate_di(hole_data, player_score) {
 
 app.get('/api/courses/:id', (req, res) => {
   db.get("SELECT * FROM courses WHERE id = ?", [req.params.id], (err, row) => {
-      if (err) return res.status(500).json({error: err.message});
+      if (err) {
+          console.error('Database error:', err);
+          return res.status(500).json({error: 'Internal server error'});
+      }
       res.json(row);
   });
 });
 
 app.get('/api/courses/:id/holes', (req, res) => {
   db.all("SELECT * FROM holes WHERE course_id = ?", [req.params.id], (err, rows) => {
-      if (err) return res.status(500).json({error: err.message});
+      if (err) {
+          console.error('Database error:', err);
+          return res.status(500).json({error: 'Internal server error'});
+      }
       res.json(rows);
   });
 });
@@ -58,7 +73,10 @@ app.post('/api/rounds/calculate-di', (req, res) => {
   if (!course_id || !scores) return res.status(400).json({error: "course_id and scores are required"});
 
   db.all("SELECT * FROM holes WHERE course_id = ?", [course_id], (err, holes) => {
-      if (err) return res.status(500).json({error: err.message});
+      if (err) {
+          console.error('Database error:', err);
+          return res.status(500).json({error: 'Internal server error'});
+      }
       if (holes.length === 0) return res.status(404).json({error: "Course not found"});
 
       const hole_breakdown = [];
