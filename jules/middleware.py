@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import inspect
 from typing import Any, Dict, Callable, List
 import time
 
@@ -98,14 +100,28 @@ class MetricsMiddleware(Middleware):
             self.errors += 1
             raise
 
+
 class RetryMiddleware(Middleware):
     def __init__(self, retries: int = 3, backoff: float = 0.5):
         self.retries = retries
         self.backoff = backoff
 
     def __call__(self, request_fn, method, url, **kwargs):
-        last_error = None
+        is_coro = inspect.iscoroutinefunction(request_fn)
 
+        if is_coro:
+            async def async_wrapper():
+                last_error = None
+                for attempt in range(self.retries):
+                    try:
+                        return await request_fn(method, url, **kwargs)
+                    except Exception as e:
+                        last_error = e
+                        await asyncio.sleep(self.backoff * (2 ** attempt))
+                raise last_error
+            return async_wrapper()
+
+        last_error = None
         for attempt in range(self.retries):
             try:
                 return request_fn(method, url, **kwargs)
