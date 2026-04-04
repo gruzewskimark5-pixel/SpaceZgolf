@@ -95,3 +95,18 @@ def test_middleware_chain():
     assert base.attempts == 3 # Transport was called 3 times
     assert metrics.count == 1 # Metrics middleware only saw 1 logical request
     assert metrics.errors == 0
+
+def test_logging_middleware_error(capsys):
+    from jules.middleware import LoggingMiddleware
+
+    mw = LoggingMiddleware()
+
+    def failing_request(method, url, **kwargs):
+        raise TransportError("Test Error")
+
+    with pytest.raises(TransportError):
+        mw(failing_request, "GET", "https://api.jules.dev/test")
+
+    captured = capsys.readouterr()
+    assert "[Jules][ERROR] GET https://api.jules.dev/test" in captured.out
+    assert "Test Error" in captured.out
