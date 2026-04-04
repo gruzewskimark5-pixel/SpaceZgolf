@@ -3,6 +3,7 @@ import json
 import logging
 import nats
 import random
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Depends, HTTPException, status, Security
 from fastapi.security import APIKeyHeader
 import os
@@ -68,6 +69,7 @@ class ChaosConfigUpdate(BaseModel):
     latency_multiplier: float
     force_low_salience: bool
 
+@app.post("/api/chaos")
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 def verify_api_key(api_key: str = Security(api_key_header)):
@@ -322,6 +324,7 @@ html = """
             const apiKey = document.getElementById('api-key').value;
             fetch('/api/chaos', {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 headers: {
                     'Content-Type': 'application/json',
                     'X-API-Key': apiKey
