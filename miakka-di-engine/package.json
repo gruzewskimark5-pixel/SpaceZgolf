@@ -5,9 +5,6 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"No tests configured yet. Exiting gracefully.\""
-    "test": "echo \"Tests pass\""
-    "test": "echo \"No tests configured for miakka-di-engine\""
-    "test": "echo 'Error: no test specified'"
   },
   "keywords": [],
   "author": "",
