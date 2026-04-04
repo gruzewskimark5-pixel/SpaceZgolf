@@ -1,0 +1,11 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DI Engine</title>
+  <script defer="" src="/static/js/bundle.js"></script></head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"><div style="padding: 20px; font-family: sans-serif;"><h1>Miakka - DI Engine</h1><div style="margin-bottom: 20px;"><button disabled="" style="margin-right: 10px; padding: 10px;">Course Overview</button><button style="padding: 10px;">DI Calculator</button></div><div><h2>Course Overview</h2><p>Par: 72 | Champion: 7200 yds | Blue: 6800 yds | White: 6200 yds</p><h3>Holes</h3><div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;"><button style="padding: 15px; font-size: 16px; background-color: rgb(240, 240, 240); color: black; border: 1px solid rgb(204, 204, 204); cursor: pointer;">Hole 3</button><button style="padding: 15px; font-size: 16px; background-color: rgb(240, 240, 240); color: black; border: 1px solid rgb(204, 204, 204); cursor: pointer;">Hole 7</button><button style="padding: 15px; font-size: 16px; background-color: rgb(240, 240, 240); color: black; border: 1px solid rgb(204, 204, 204); cursor: pointer;">Hole 14</button></div></div></div></div>
+
+
+</body></html>

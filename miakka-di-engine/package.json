@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Tests pass\""
+    "test": "echo 'Error: no test specified'"
   },
   "keywords": [],
   "author": "",

@@ -4,6 +4,10 @@ import logging
 import nats
 import random
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Depends, HTTPException, status, Security
+from fastapi.security import APIKeyHeader
+import os
+import hmac
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
@@ -60,12 +64,26 @@ chaos_config = {
     "force_low_salience": False
 }
 
+
 class ChaosConfigUpdate(BaseModel):
     drop_rate: float
     latency_multiplier: float
     force_low_salience: bool
 
 @app.post("/api/chaos")
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+def verify_api_key(api_key: str = Security(api_key_header)):
+    expected_key = os.getenv("SIMULATOR_API_KEY")
+    if not expected_key:
+        logger.error("SIMULATOR_API_KEY environment variable is not set. API is unsecured.")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Server configuration error")
+
+    if not api_key or not hmac.compare_digest(api_key.encode('utf-8'), expected_key.encode('utf-8')):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or missing API Key")
+    return api_key
+
+@app.post("/api/chaos", dependencies=[Depends(verify_api_key)])
 async def update_chaos(config: ChaosConfigUpdate):
     global chaos_config
     chaos_config["drop_rate"] = max(0.0, min(1.0, config.drop_rate))
@@ -214,6 +232,13 @@ html = """
             <div class="chaos-panel">
                 <h3>⚠️ Chaos Engineering</h3>
 
+
+                <div class="chaos-control">
+                    <label>
+                        <span>API Key</span>
+                    </label>
+                    <input type="password" id="api-key" placeholder="Enter API Key">
+                </div>
                 <div class="chaos-control">
                     <label>
                         <span>Event Drop Rate (Packet Loss)</span>
@@ -297,9 +322,14 @@ html = """
                 force_low_salience: forceLowInput.checked
             };
 
+            const apiKey = document.getElementById('api-key').value;
             fetch('/api/chaos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey
+                },
                 body: JSON.stringify(config)
             }).catch(err => console.error("Error updating chaos config", err));
         }
