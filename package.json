@@ -1,1 +1,1 @@
-{"name":"spacezgolf","version":"1.0.0","private":true,"scripts":{"test":"npm run test --workspaces --if-present","build":"npm run build --workspaces --if-present"},"workspaces":["miakka-di-engine","score-api","spacez-golf-mvp"]}
+{"name":"spacezgolf","version":"1.0.0","private":true,"workspaces":["miakka-di-engine","score-api","spacez-golf-mvp"],"scripts":{"test":"npm run test --workspaces --if-present","build":"npm run build --workspaces --if-present"}}
