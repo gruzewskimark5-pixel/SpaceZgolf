@@ -3,7 +3,9 @@ import json
 import logging
 import nats
 import random
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+import os
+import hmac
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Header, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
@@ -66,7 +68,11 @@ class ChaosConfigUpdate(BaseModel):
     force_low_salience: bool
 
 @app.post("/api/chaos")
-async def update_chaos(config: ChaosConfigUpdate):
+async def update_chaos(config: ChaosConfigUpdate, x_api_key: str = Header(None)):
+    expected_key = os.getenv("SIMULATOR_API_KEY", "")
+    if not expected_key or not x_api_key or not hmac.compare_digest(x_api_key, expected_key):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
     global chaos_config
     chaos_config["drop_rate"] = max(0.0, min(1.0, config.drop_rate))
     chaos_config["latency_multiplier"] = max(0.1, config.latency_multiplier)
@@ -216,6 +222,13 @@ html = """
 
                 <div class="chaos-control">
                     <label>
+                        <span>API Key</span>
+                    </label>
+                    <input type="password" id="api-key" placeholder="Enter API Key to apply chaos" style="width: 100%; padding: 5px; background: #1e1e1e; border: 1px solid #bb86fc; color: #fff; box-sizing: border-box;">
+                </div>
+
+                <div class="chaos-control">
+                    <label>
                         <span>Event Drop Rate (Packet Loss)</span>
                         <span id="drop-rate-val">0%</span>
                     </label>
@@ -296,10 +309,14 @@ html = """
                 latency_multiplier: parseInt(latencyInput.value) / 100.0,
                 force_low_salience: forceLowInput.checked
             };
+            const apiKey = document.getElementById('api-key').value;
 
             fetch('/api/chaos', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey || ''
+                },
                 body: JSON.stringify(config)
             }).catch(err => console.error("Error updating chaos config", err));
         }
