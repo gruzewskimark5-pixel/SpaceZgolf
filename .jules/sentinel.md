@@ -7,3 +7,7 @@
 **Vulnerability:** Node.js Express application returned raw database error messages (`err.message`) to the client on SQL query failures.
 **Learning:** This leaks internal database structure details, query context, or schema information which can be leveraged by attackers for SQL injection or reconnaissance.
 **Prevention:** Always log the detailed error internally (`console.error` or logging library) and return a generic, secure error message (e.g., "Database error occurred") to the client.
+## 2024-05-24 - [Medium] Fixed Error Detail Leakage
+**Vulnerability:** The application was exposing internal database error messages (like `err.message`) directly to the client via `res.status(500).json({error: err.message})`.
+**Learning:** Returning raw backend error objects violates the 'fail securely' principle and can leak sensitive information about the database schema or internal structures.
+**Prevention:** Always log detailed errors internally (e.g., using `console.error`) and return generic, secure error messages (e.g., 'Internal server error') to the client.
