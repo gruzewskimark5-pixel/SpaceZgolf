@@ -1,9 +1,1 @@
-{
-  "name": "spacezgolf",
-  "version": "1.0.0",
-  "scripts": {
-    "test": "npm run test --workspaces --if-present && echo 'All workspace tests passed!'",
-    "start": "node index.js"
-  },
-  "dependencies": {}
-}
+{"name": "spacezgolf", "version": "1.0.0", "private": true, "workspaces": ["miakka-di-engine", "score-api", "spacez-golf-mvp"], "scripts": {"test": "npm run test --workspaces --if-present && echo 'All workspace tests passed!'", "build": "npm run build --workspaces --if-present"}}
