@@ -396,12 +396,29 @@ html = """
         connect();
 
         function createSalienceBar(label, value) {
-            return `
-                <div class="salience-label"><span>${label}</span><span>${(value*100).toFixed(0)}%</span></div>
-                <div class="salience-bar-container">
-                    <div class="salience-bar" style="width: ${value * 100}%; background: ${value > 0.8 ? '#ff0266' : '#03dac6'}"></div>
-                </div>
-            `;
+            const container = document.createElement('div');
+
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'salience-label';
+            const span1 = document.createElement('span');
+            span1.textContent = label;
+            const span2 = document.createElement('span');
+            span2.textContent = `${(value*100).toFixed(0)}%`;
+            labelDiv.appendChild(span1);
+            labelDiv.appendChild(span2);
+
+            const barContainer = document.createElement('div');
+            barContainer.className = 'salience-bar-container';
+            const bar = document.createElement('div');
+            bar.className = 'salience-bar';
+            bar.style.width = `${value * 100}%`;
+            bar.style.background = value > 0.8 ? '#ff0266' : '#03dac6';
+            barContainer.appendChild(bar);
+
+            container.appendChild(labelDiv);
+            container.appendChild(barContainer);
+
+            return container;
         }
 
         function handleEvent(data) {
@@ -416,14 +433,20 @@ html = """
 
             let timeString = new Date(data.timestamp).toLocaleTimeString();
 
-            el.innerHTML = `
-                <div class="meta">${escapeHTML(timeString)} | ID: ${escapeHTML(data.event_id)} | Type: ${escapeHTML(data.event_type)}</div>
-                <div class="title">${escapeHTML(data.description)}</div>
-                ${createSalienceBar('Narrative', s.narrative)}
-                ${createSalienceBar('Visual', s.visual)}
-                ${createSalienceBar('Audio', s.audio)}
-                ${createSalienceBar('Game State', s.game_state)}
-            `;
+            const metaDiv = document.createElement('div');
+            metaDiv.className = 'meta';
+            metaDiv.textContent = `${timeString} | ID: ${data.event_id} | Type: ${data.event_type}`;
+
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'title';
+            titleDiv.textContent = data.description;
+
+            el.appendChild(metaDiv);
+            el.appendChild(titleDiv);
+            el.appendChild(createSalienceBar('Narrative', s.narrative));
+            el.appendChild(createSalienceBar('Visual', s.visual));
+            el.appendChild(createSalienceBar('Audio', s.audio));
+            el.appendChild(createSalienceBar('Game State', s.game_state));
 
             // Prepend to top
             eventsFeed.insertBefore(el, eventsFeed.firstChild);
@@ -435,14 +458,31 @@ html = """
 
             // Simulate Director Decision based on high salience
             if (isHighSalience) {
-                latestDecision.innerHTML = `
-                    <div class="meta">Triggered by: ${escapeHTML(data.event_id)}</div>
-                    <div class="title">Action: ASSEMBLE_HIGHLIGHT_CLIP</div>
-                    <div>Confidence: ${(avgSal * 100).toFixed(1)}%</div>
-                    <div style="color: #aaa; font-size: 0.85em; margin-top: 5px;">
-                        Queueing FFmpeg process... (Est pre-roll: 4s)
-                    </div>
-                `;
+                while (latestDecision.firstChild) {
+                    latestDecision.removeChild(latestDecision.firstChild);
+                }
+
+                const dMetaDiv = document.createElement('div');
+                dMetaDiv.className = 'meta';
+                dMetaDiv.textContent = `Triggered by: ${data.event_id}`;
+
+                const dTitleDiv = document.createElement('div');
+                dTitleDiv.className = 'title';
+                dTitleDiv.textContent = 'Action: ASSEMBLE_HIGHLIGHT_CLIP';
+
+                const dConfDiv = document.createElement('div');
+                dConfDiv.textContent = `Confidence: ${(avgSal * 100).toFixed(1)}%`;
+
+                const dSubDiv = document.createElement('div');
+                dSubDiv.style.color = '#aaa';
+                dSubDiv.style.fontSize = '0.85em';
+                dSubDiv.style.marginTop = '5px';
+                dSubDiv.textContent = 'Queueing FFmpeg process... (Est pre-roll: 4s)';
+
+                latestDecision.appendChild(dMetaDiv);
+                latestDecision.appendChild(dTitleDiv);
+                latestDecision.appendChild(dConfDiv);
+                latestDecision.appendChild(dSubDiv);
 
                 // Simulate Commentary
                 const phrases = [
@@ -453,7 +493,19 @@ html = """
                     "A textbook execution of a third party.",
                     "The mechanics are off the charts right now."
                 ];
-                latestCommentary.innerHTML = `"${phrases[Math.floor(Math.random() * phrases.length)]}" <br/><span class="meta">Persona: Analytical Hype</span>`;
+
+                while (latestCommentary.firstChild) {
+                    latestCommentary.removeChild(latestCommentary.firstChild);
+                }
+                const textNode = document.createTextNode(`"${phrases[Math.floor(Math.random() * phrases.length)]}" `);
+                const br = document.createElement('br');
+                const span = document.createElement('span');
+                span.className = 'meta';
+                span.textContent = 'Persona: Analytical Hype';
+
+                latestCommentary.appendChild(textNode);
+                latestCommentary.appendChild(br);
+                latestCommentary.appendChild(span);
             }
         }
 
@@ -464,12 +516,37 @@ html = """
             let timeString = new Date(data.timestamp).toLocaleTimeString();
             let retColor = data.retention_delta > 0 ? '#4caf50' : '#f44336';
 
-            el.innerHTML = `
-                <div class="meta">${escapeHTML(timeString)} | Ref: ${escapeHTML(data.event_id)}</div>
-                <div class="title">Engagement Score: ${(data.engagement_score * 100).toFixed(1)}</div>
-                <div>Retention Delta: <span style="color: ${retColor}">${(data.retention_delta > 0 ? '+' : '')}${(data.retention_delta * 100).toFixed(2)}%</span></div>
-                <div class="meta" style="margin-top: 5px;">Latency: <span style="${data.latency_ms > 200 ? 'color: #ff5252; font-weight: bold;' : ''}">${escapeHTML(data.latency_ms)}ms</span></div>
-            `;
+            const metaDiv1 = document.createElement('div');
+            metaDiv1.className = 'meta';
+            metaDiv1.textContent = `${timeString} | Ref: ${data.event_id}`;
+
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'title';
+            titleDiv.textContent = `Engagement Score: ${(data.engagement_score * 100).toFixed(1)}`;
+
+            const retDiv = document.createElement('div');
+            retDiv.textContent = 'Retention Delta: ';
+            const spanRet = document.createElement('span');
+            spanRet.style.color = retColor;
+            spanRet.textContent = `${data.retention_delta > 0 ? '+' : ''}${(data.retention_delta * 100).toFixed(2)}%`;
+            retDiv.appendChild(spanRet);
+
+            const metaDiv2 = document.createElement('div');
+            metaDiv2.className = 'meta';
+            metaDiv2.style.marginTop = '5px';
+            metaDiv2.textContent = 'Latency: ';
+            const spanLat = document.createElement('span');
+            if (data.latency_ms > 200) {
+                spanLat.style.color = '#ff5252';
+                spanLat.style.fontWeight = 'bold';
+            }
+            spanLat.textContent = `${data.latency_ms}ms`;
+            metaDiv2.appendChild(spanLat);
+
+            el.appendChild(metaDiv1);
+            el.appendChild(titleDiv);
+            el.appendChild(retDiv);
+            el.appendChild(metaDiv2);
 
             feedbackFeed.insertBefore(el, feedbackFeed.firstChild);
 
