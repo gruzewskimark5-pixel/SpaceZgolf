@@ -14,6 +14,7 @@ const sessionRepo_1 = require("./repos/sessionRepo");
 const scoreRepo_1 = require("./repos/scoreRepo");
 const replayRepo_1 = require("./repos/replayRepo");
 const auth_1 = require("./middleware/auth");
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
@@ -26,8 +27,11 @@ app.use((req, res, next) => {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     next();
 });
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'supersecretrefreshkey';
+if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
+    throw new Error('JWT_SECRET and JWT_REFRESH_SECRET must be defined in environment variables');
+}
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 function hashRefreshToken(token) {
     return crypto_1.default.createHash('sha256').update(token).digest('hex');
 }
@@ -40,8 +44,16 @@ app.post('/simulateShot', (req, res) => {
     // Mock physics preview
     res.json({ success: true, preview: 'simulation_data_here' });
 });
+// Security: Rate limiting for auth endpoints
+const authLimiter = (0, express_rate_limit_1.default)({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 requests per `window` (here, per 15 minutes)
+    message: { error: 'Too many authentication attempts, please try again after 15 minutes' },
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
 // POST /auth/register
-app.post('/auth/register', async (req, res) => {
+app.post('/auth/register', authLimiter, async (req, res) => {
     try {
         const { username, email, password } = req.body;
         if (!username || !email || !password) {
@@ -64,7 +76,7 @@ app.post('/auth/register', async (req, res) => {
     }
 });
 // POST /auth/login
-app.post('/auth/login', async (req, res) => {
+app.post('/auth/login', authLimiter, async (req, res) => {
     try {
         const { identifier, password } = req.body;
         if (!identifier || !password) {

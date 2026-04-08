@@ -9,6 +9,7 @@ import { SessionRepo } from './repos/sessionRepo';
 import { ScoreRepo } from './repos/scoreRepo';
 import { ReplayRepo } from './repos/replayRepo';
 import { requireAuth, optionalAuth, AuthRequest } from './middleware/auth';
+import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 
@@ -46,8 +47,17 @@ app.post('/simulateShot', (req, res) => {
   res.json({ success: true, preview: 'simulation_data_here' });
 });
 
+// Security: Rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per `window` (here, per 15 minutes)
+  message: { error: 'Too many authentication attempts, please try again after 15 minutes' },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
 // POST /auth/register
-app.post('/auth/register', async (req, res) => {
+app.post('/auth/register', authLimiter, async (req, res) => {
   try {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
@@ -75,7 +85,7 @@ app.post('/auth/register', async (req, res) => {
 });
 
 // POST /auth/login
-app.post('/auth/login', async (req, res) => {
+app.post('/auth/login', authLimiter, async (req, res) => {
   try {
     const { identifier, password } = req.body;
     if (!identifier || !password) {

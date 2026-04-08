@@ -17,3 +17,8 @@
 **Vulnerability:** The simulator dashboard (`spacez-visual-intelligence/services/simulator/main.py`) constructed dynamic HTML using `.innerHTML` combined with template strings that interpolated user-provided/dynamic data (such as `event_id`, `description`, `engagement_score`). Even with a custom `escapeHTML` function applied to some fields, directly creating DOM nodes via string concatenation is error-prone, brittle, and introduces a high risk of DOM-based XSS if the escaping logic is ever bypassed or forgotten on a newly added field.
 **Learning:** XSS can occur anytime untrusted or unverified data is parsed as HTML. Using `.innerHTML` circumvents the browser's built-in protections against script injection. The previous approach relied on manual, piece-meal escaping which is difficult to maintain securely.
 **Prevention:** Always use safe DOM manipulation APIs like `document.createElement()`, `document.createTextNode()`, and `.textContent`. These APIs treat input strictly as text or data, ensuring it cannot be executed as code, regardless of its contents.
+
+## 2024-10-28 - [High] Missing Rate Limiting on Authentication Endpoints
+**Vulnerability:** The `score-api` authentication endpoints (`/auth/login` and `/auth/register`) had no rate limits applied, allowing unlimited, high-frequency requests.
+**Learning:** Unrestricted authentication endpoints leave the application highly vulnerable to brute-force password guessing and potential Denial-of-Service (DoS) attacks on the database layer.
+**Prevention:** Always implement rate limiting on authentication routes. Use libraries like `express-rate-limit` to bound the number of requests per IP over a set time window.
