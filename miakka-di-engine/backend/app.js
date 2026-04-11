@@ -72,7 +72,25 @@ app.get('/api/courses/:id/holes', (req, res) => {
 
 app.post('/api/rounds/calculate-di', (req, res) => {
   const { course_id, scores } = req.body;
-  if (!course_id || !scores) return res.status(400).json({error: "course_id and scores are required"});
+
+  // Input Validation
+  if (!course_id || typeof course_id !== 'string') {
+    return res.status(400).json({error: "course_id must be a string"});
+  }
+  if (!scores || typeof scores !== 'object' || Array.isArray(scores)) {
+    return res.status(400).json({error: "scores must be a plain object"});
+  }
+
+  for (const holeNum in scores) {
+    if (Object.prototype.hasOwnProperty.call(scores, holeNum)) {
+      const score = scores[holeNum];
+      if (typeof score !== 'number' || !Number.isInteger(score) || score <= 0 || score > 20) {
+        return res.status(400).json({
+          error: `Invalid score for hole ${holeNum}: must be an integer between 1 and 20`
+        });
+      }
+    }
+  }
 
   db.all("SELECT * FROM holes WHERE course_id = ?", [course_id], (err, holes) => {
       if (err) { console.error('Database error:', err); return res.status(500).json({error: 'Database error occurred'}); }
