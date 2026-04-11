@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from crypto_integration import get_onchain_balance, generate_crypto_feed
+from crypto_integration import get_onchain_balance, generate_crypto_feed, get_whale_movement
 
 @patch('crypto_integration.WEB3')
 def test_get_onchain_balance_native(mock_web3):
@@ -19,6 +19,11 @@ def test_get_onchain_balance_token(mock_web3):
 
     balance = get_onchain_balance("0x1234567890123456789012345678901234567890", "0x0987654321098765432109876543210987654321")
     assert balance == 5.0
+
+
+def test_get_whale_movement():
+    result = get_whale_movement("0xDummyAddress", threshold=500)
+    assert result == "No major whale movement detected in last 1h"
 
 @patch('crypto_integration.get_onchain_balance')
 @patch('crypto_integration.EXCHANGE')
