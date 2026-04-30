@@ -2,9 +2,9 @@ import { WorldState } from "./types";
 import { computeGravity } from "./gravity";
 import { resolveCollisions } from "./collision";
 
-// HARD-CODED FIXED TIMESTEP for deterministic physics
-export const FIXED_DT = 1 / 60;
-export const STANDARD_SIM_STEPS = 300;
+// Configurable FIXED TIMESTEP for deterministic physics
+export const FIXED_DT = process.env.FIXED_DT ? parseFloat(process.env.FIXED_DT) : 1 / 60;
+export const STANDARD_SIM_STEPS = process.env.STANDARD_SIM_STEPS ? parseInt(process.env.STANDARD_SIM_STEPS, 10) : 300;
 
 export function step(state: WorldState): WorldState {
   const g = computeGravity(state);
