@@ -2,6 +2,7 @@
 from web3 import Web3
 import ccxt
 import yfinance as yf
+from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 import os
 import json
@@ -32,6 +33,18 @@ def get_whale_movement(token_address, threshold=1000):
     # Simple recent large transfer detection (expand with Moralis or custom subgraph later)
     return "No major whale movement detected in last 1h"  # placeholder
 
+def fetch_ticker_data(short, ticker):
+    """Fetch ticker data for a single symbol."""
+    try:
+        ticker_data = EXCHANGE.fetch_ticker(ticker)
+        return {
+            "symbol": short,
+            "price": ticker_data['last'],
+            "signal": "HOLD"  # reuse your existing signal logic here
+        }
+    except Exception:
+        return None
+
 def generate_crypto_feed():
     data = {
         "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
@@ -39,17 +52,17 @@ def generate_crypto_feed():
         "onchain": {}
     }
 
-    for short, ticker in {"BTC": "BTC/USDT", "RAVANA": "RAVANA/USDT", "SMSS": "SMSS/USDT"}.items():
-        try:
-            ticker_data = EXCHANGE.fetch_ticker(ticker)
-            price = ticker_data['last']
-            data["tickers"].append({
-                "symbol": short,
-                "price": price,
-                "signal": "HOLD"  # reuse your existing signal logic here
-            })
-        except:
-            pass
+    tickers_to_fetch = {"BTC": "BTC/USDT", "RAVANA": "RAVANA/USDT", "SMSS": "SMSS/USDT"}
+
+    with ThreadPoolExecutor(max_workers=len(tickers_to_fetch)) as executor:
+        # Submit all tasks and gather results
+        futures = [executor.submit(fetch_ticker_data, short, ticker)
+                   for short, ticker in tickers_to_fetch.items()]
+
+        for future in futures:
+            result = future.result()
+            if result:
+                data["tickers"].append(result)
 
     # Example wallet check (add your own addresses)
     data["onchain"] = {
