@@ -5,7 +5,12 @@ import yfinance as yf
 from dotenv import load_dotenv
 import os
 import json
+import logging
 from datetime import datetime, timezone
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -48,8 +53,8 @@ def generate_crypto_feed():
                 "price": price,
                 "signal": "HOLD"  # reuse your existing signal logic here
             })
-        except:
-            pass
+        except Exception as e:
+            logger.error(f"Error fetching ticker {ticker}: {e}")
 
     # Example wallet check (add your own addresses)
     data["onchain"] = {
