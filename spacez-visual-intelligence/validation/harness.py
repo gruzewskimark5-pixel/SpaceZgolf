@@ -4,7 +4,6 @@ import argparse
 import json
 import random
 import statistics
-from dataclasses import asdict
 
 from .director import DirectorBrain
 from .models import DirectorDecision, MatchResult, ShotEvent, ValidationMetrics
@@ -25,8 +24,6 @@ def generate_match(seed: int, match_id: str, shots: int = 72) -> MatchResult:
         kind = "routine"
         impact = rng.uniform(0.05, 0.35)
 
-        # Deterministic ground-truth event generator. These are labels, not
-        # Director outputs, so the harness can measure the Director honestly.
         if shock > 0.985:
             kind = "clutch"
             heat = min(100, heat + rng.uniform(25, 40))
@@ -77,11 +74,11 @@ def generate_match(seed: int, match_id: str, shots: int = 72) -> MatchResult:
     return result
 
 
-def evaluate(matches: list[MatchResult], director: DirectorBrain, k: int = 5) -> ValidationMetrics:
-    predicted_ids: list[str] = []
-    focused_ids: list[str] = []
+def evaluate(matches: list[MatchResult], director: DirectorBrain) -> ValidationMetrics:
+    focused_ids: set[str] = set()
+    prediction_hits: set[str] = set()
+    prediction_attempts = 0
     lead_times: list[int] = []
-    total_events = 0
 
     for match in matches:
         decisions: list[DirectorDecision] = []
@@ -89,58 +86,41 @@ def evaluate(matches: list[MatchResult], director: DirectorBrain, k: int = 5) ->
             future = match.events[i + 1 : i + 1 + director.config.prediction_window]
             decision = director.decide(event, future)
             decisions.append(decision)
-            if decision.predicted:
-                predicted_ids.append(event.event_id)
             if decision.decision == "FOCUS_NOW":
-                focused_ids.append(event.event_id)
-
+                focused_ids.add(event.event_id)
+            if decision.predicted:
+                prediction_attempts += 1
+                target = next((e for e in future if e.event_id in match.true_major_event_ids), None)
+                if target is not None:
+                    prediction_hits.add(target.event_id)
+                    lead_times.append(target.timestamp_ms - event.timestamp_ms)
         match.decisions = decisions
-        total_events += len(match.events)
 
-        # A prediction is credited when the next few events contain a true major event.
-        for i, decision in enumerate(decisions):
-            if not decision.predicted:
-                continue
-            for j in range(i + 1, min(len(match.events), i + 1 + director.config.prediction_window + 1)):
-                target = match.events[j]
-                if target.event_id in match.true_major_event_ids:
-                    lead_times.append(target.timestamp_ms - match.events[i].timestamp_ms)
-                    break
-
-    true_major = sum(len(m.true_major_event_ids) for m in matches)
-    predicted_major = len(predicted_ids)
-    hits = sum(
-        1
-        for pid in predicted_ids
-        if any(pid in m.true_major_event_ids for m in matches)
-    )
-
-    # Precision/recall for immediate focus against ground-truth major events.
-    focused_set = set(focused_ids)
     true_set = {eid for m in matches for eid in m.true_major_event_ids}
-    focus_hits = len(focused_set & true_set)
-    precision = focus_hits / len(focused_set) if focused_set else 0.0
-    recall = focus_hits / true_major if true_major else 0.0
-    false_focus = (len(focused_set) - focus_hits) / len(focused_set) if focused_set else 0.0
+    focus_hits = len(focused_ids & true_set)
+    focus_precision = focus_hits / len(focused_ids) if focused_ids else 0.0
+    focus_recall = focus_hits / len(true_set) if true_set else 0.0
+    false_focus = 1.0 - focus_precision if focused_ids else 0.0
 
-    # Event integrity is measured on generated IDs and strict ordering.
-    ids = [e.event_id for m in matches for e in m.events]
+    predictive_precision = len(prediction_hits) / prediction_attempts if prediction_attempts else 0.0
+    predictive_recall = len(prediction_hits) / len(true_set) if true_set else 0.0
+
+    all_ids = [e.event_id for m in matches for e in m.events]
     ordered = all(
         all(a.shot_index < b.shot_index for a, b in zip(m.events, m.events[1:]))
         for m in matches
     )
-    integrity = (len(ids) == len(set(ids)) and ordered)
-
-    replay_recall = recall
-    _ = (predicted_major, hits, total_events)  # retained for future forecast metrics
+    integrity = 1.0 if len(all_ids) == len(set(all_ids)) and ordered else 0.0
 
     return ValidationMetrics(
-        precision_at_k=precision,
-        recall_at_k=recall,
+        precision_at_k=focus_precision,
+        recall_at_k=focus_recall,
+        predictive_precision=predictive_precision,
+        predictive_recall=predictive_recall,
         mean_lead_time_ms=statistics.mean(lead_times) if lead_times else 0.0,
         false_focus_rate=false_focus,
-        event_integrity=1.0 if integrity else 0.0,
-        replay_recall=replay_recall,
+        event_integrity=integrity,
+        replay_recall=focus_recall,
     )
 
 
