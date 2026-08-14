@@ -51,6 +51,8 @@ class MatchResult:
 class ValidationMetrics:
     precision_at_k: float
     recall_at_k: float
+    predictive_precision: float
+    predictive_recall: float
     mean_lead_time_ms: float
     false_focus_rate: float
     event_integrity: float
@@ -60,6 +62,8 @@ class ValidationMetrics:
         return {
             "precision_at_k": round(self.precision_at_k, 4),
             "recall_at_k": round(self.recall_at_k, 4),
+            "predictive_precision": round(self.predictive_precision, 4),
+            "predictive_recall": round(self.predictive_recall, 4),
             "mean_lead_time_ms": round(self.mean_lead_time_ms, 2),
             "false_focus_rate": round(self.false_focus_rate, 4),
             "event_integrity": round(self.event_integrity, 4),
