@@ -6,7 +6,12 @@ from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 import os
 import json
+import logging
 from datetime import datetime, timezone
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -63,6 +68,17 @@ def generate_crypto_feed():
             result = future.result()
             if result:
                 data["tickers"].append(result)
+    for short, ticker in {"BTC": "BTC/USDT", "RAVANA": "RAVANA/USDT", "SMSS": "SMSS/USDT"}.items():
+        try:
+            ticker_data = EXCHANGE.fetch_ticker(ticker)
+            price = ticker_data['last']
+            data["tickers"].append({
+                "symbol": short,
+                "price": price,
+                "signal": "HOLD"  # reuse your existing signal logic here
+            })
+        except Exception as e:
+            logger.error(f"Error fetching ticker {ticker}: {e}")
 
     # Example wallet check (add your own addresses)
     data["onchain"] = {
