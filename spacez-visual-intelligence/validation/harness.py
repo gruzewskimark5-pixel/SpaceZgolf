@@ -19,31 +19,34 @@ def generate_match(seed: int, match_id: str, shots: int = 72) -> MatchResult:
     win_probability = 0.5
 
     for i in range(shots):
-        hole = min(18, i // 4 + 1)
         shock = rng.random()
         kind = "routine"
         impact = rng.uniform(0.05, 0.35)
 
-        if shock > 0.985:
+        if shock > 0.99:
             kind = "clutch"
             heat = min(100, heat + rng.uniform(25, 40))
             momentum += rng.uniform(20, 35)
             impact = rng.uniform(0.80, 1.00)
-        elif shock > 0.96:
+        elif shock > 0.975:
             kind = "lead_change"
             heat = min(100, heat + rng.uniform(12, 25))
             momentum += rng.uniform(-35, 35)
             impact = rng.uniform(0.75, 0.95)
-        elif shock > 0.925:
+        elif shock > 0.95:
             kind = "momentum_shift"
             momentum += rng.choice([-1, 1]) * rng.uniform(20, 35)
             heat = min(100, heat + rng.uniform(8, 20))
             impact = rng.uniform(0.65, 0.90)
-        elif shock > 0.90:
+        elif shock > 0.925:
             kind = "meltdown"
             heat = min(100, heat + rng.uniform(15, 30))
             momentum -= rng.uniform(20, 35)
             impact = rng.uniform(0.70, 0.95)
+        elif shock > 0.90:
+            kind = "heat_spike"
+            heat = min(100, heat + rng.uniform(20, 35))
+            impact = rng.uniform(0.55, 0.85)
         else:
             heat = max(0, min(100, heat + rng.uniform(-4, 5)))
             momentum = max(-100, min(100, momentum + rng.uniform(-8, 8)))
@@ -58,7 +61,7 @@ def generate_match(seed: int, match_id: str, shots: int = 72) -> MatchResult:
             match_id=match_id,
             shot_index=i,
             player_id="p1" if i % 2 == 0 else "p2",
-            hole=hole,
+            hole=min(18, i // 4 + 1),
             score_diff=round((win_probability - 0.5) * 4, 3),
             heat=round(heat, 3),
             momentum=round(momentum, 3),
@@ -83,8 +86,9 @@ def evaluate(matches: list[MatchResult], director: DirectorBrain) -> ValidationM
     for match in matches:
         decisions: list[DirectorDecision] = []
         for i, event in enumerate(match.events):
+            previous = match.events[max(0, i - 3):i]
             future = match.events[i + 1 : i + 1 + director.config.prediction_window]
-            decision = director.decide(event, future)
+            decision = director.decide(event, previous, future)
             decisions.append(decision)
             if decision.decision == "FOCUS_NOW":
                 focused_ids.add(event.event_id)
@@ -101,15 +105,10 @@ def evaluate(matches: list[MatchResult], director: DirectorBrain) -> ValidationM
     focus_precision = focus_hits / len(focused_ids) if focused_ids else 0.0
     focus_recall = focus_hits / len(true_set) if true_set else 0.0
     false_focus = 1.0 - focus_precision if focused_ids else 0.0
-
     predictive_precision = len(prediction_hits) / prediction_attempts if prediction_attempts else 0.0
     predictive_recall = len(prediction_hits) / len(true_set) if true_set else 0.0
-
     all_ids = [e.event_id for m in matches for e in m.events]
-    ordered = all(
-        all(a.shot_index < b.shot_index for a, b in zip(m.events, m.events[1:]))
-        for m in matches
-    )
+    ordered = all(all(a.shot_index < b.shot_index for a, b in zip(m.events, m.events[1:])) for m in matches)
     integrity = 1.0 if len(all_ids) == len(set(all_ids)) and ordered else 0.0
 
     return ValidationMetrics(
@@ -127,14 +126,7 @@ def evaluate(matches: list[MatchResult], director: DirectorBrain) -> ValidationM
 def run(seed: int, matches: int, shots: int) -> dict:
     scenarios = [generate_match(seed + i, f"sim-{i:05d}", shots) for i in range(matches)]
     metrics = evaluate(scenarios, DirectorBrain())
-    return {
-        "seed": seed,
-        "matches": matches,
-        "shots_per_match": shots,
-        "events": matches * shots,
-        "metrics": metrics.as_dict(),
-        "major_events": sum(len(m.true_major_event_ids) for m in scenarios),
-    }
+    return {"seed": seed, "matches": matches, "shots_per_match": shots, "events": matches * shots, "metrics": metrics.as_dict(), "major_events": sum(len(m.true_major_event_ids) for m in scenarios)}
 
 
 if __name__ == "__main__":
