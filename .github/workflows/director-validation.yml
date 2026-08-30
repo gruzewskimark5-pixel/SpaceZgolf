@@ -1,0 +1,85 @@
+name: Director Brain Validation
+
+on:
+  push:
+    branches:
+      - validation/director-brain-harness
+    paths:
+      - 'spacez-visual-intelligence/validation/**'
+      - '.github/workflows/director-validation.yml'
+  pull_request:
+    paths:
+      - 'spacez-visual-intelligence/validation/**'
+      - '.github/workflows/director-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  director-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: spacez-visual-intelligence
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run deterministic calibration corpus
+        run: |
+          mkdir -p validation-results
+          python -m validation.harness \
+            --seed 20260814 \
+            --matches 1000 \
+            --shots 72 \
+            > validation-results/calibration-2.json
+
+      - name: Validate result schema and gates
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          p = Path('validation-results/calibration-2.json')
+          data = json.loads(p.read_text())
+          m = data['metrics']
+
+          gates = {
+              'event_integrity': m['event_integrity'] >= 0.9999,
+              'false_focus_rate': m['false_focus_rate'] < 0.30,
+              'precision_at_k': m['precision_at_k'] >= 0.70,
+              'recall_at_k': m['recall_at_k'] > 0.55,
+              'predictive_precision': m['predictive_precision'] >= 0.70,
+              'predictive_recall': m['predictive_recall'] > 0.55,
+          }
+
+          print(json.dumps({'metrics': m, 'gates': gates}, indent=2))
+          failed = [name for name, passed in gates.items() if not passed]
+          if failed:
+              print(f'Validation gates failed: {", ".join(failed)}')
+              raise SystemExit(1)
+          print('All Director validation gates passed.')
+          PY
+
+      - name: Upload validation metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: director-validation-${{ github.sha }}
+          path: spacez-visual-intelligence/validation-results/
+          if-no-files-found: error
+          retention-days: 30
